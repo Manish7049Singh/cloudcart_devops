@@ -22,7 +22,7 @@ jobs:
       run:
         working-directory: backend
     env:
-      DATABASE_URL: sqlite:///${{ runner.temp }}/cloudcart-ci.db
+      DATABASE_URL: sqlite:///./cloudcart-ci.db
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
