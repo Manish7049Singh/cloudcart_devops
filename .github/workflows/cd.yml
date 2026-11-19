@@ -1,0 +1,37 @@
+name: CloudCart CD
+
+on:
+  workflow_run:
+    workflows: ["CloudCart CI"]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: cd-status-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  cd-status:
+    name: CD Status
+    if: >-
+      ${{
+        github.event.workflow_run.name == 'CloudCart CI' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        github.event.repository.full_name == github.repository
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report CI result without deploying
+        env:
+          CI_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          if [[ "$CI_CONCLUSION" != "success" ]]; then
+            echo "::error::CloudCart CI completed with conclusion '${CI_CONCLUSION}'. No deployment was attempted."
+            exit 1
+          fi
+
+          echo "::notice::CloudCart CI succeeded on main. CD status is green; no deployment was attempted."
